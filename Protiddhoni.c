@@ -4,6 +4,7 @@
 #define MAX_MEDICINES 100
 struct appointment {
     char hname[100];
+    char searchName[100];
     char dname[100];
     char date[15];
     char time[10];
@@ -129,8 +130,12 @@ void addAppointment() {
     appt.age[strcspn(appt.age, "\n")] = '\0';
 
     printf("|Gender: ");
-    fgets(appt.gender, sizeof(appt.gender), stdin);
-    appt.gender[strcspn(appt.gender, "\n")] = '\0';
+    printf("\n|1. Male\n|2. Female ");
+    int gender_choice;
+    printf("\nEnter your choice (1 or 2): ");
+    scanf("%d", &gender_choice);
+    getchar();
+    strcpy(appt.gender, (gender_choice == 1) ? "Male" : "Female");
 
     printf("|Phone Number: ");
     fgets(appt.phone, sizeof(appt.phone), stdin);
@@ -160,7 +165,7 @@ void addAppointment() {
 
     appt.isCompleted = 0;
 
-    FILE *file = fopen("appointment.txt", "w");
+    FILE *file = fopen("appointment.txt", "a");
     fprintf(file, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n", appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, appt.isCompleted);
     fclose(file);
 
@@ -177,101 +182,127 @@ void addAppointment() {
         clear();
     }
 }
-void markAppointment() {
-    FILE *file = fopen("appointment.txt", "r+");
-    printf("\n|Enter the patient's full name to mark as completed: ");
+void updateAppointmentStatus(char statusMessage[], int statusValue) {
+    FILE *file = fopen("appointment.txt", "r");
+    printf("\n\t\t\t ------------------  Status Updating Screen  ------------------\n\n");
     char searchName[100];
-    getchar();
+    printf("\n|Enter the patient's full name to %s: ", statusMessage);
     fgets(searchName, sizeof(searchName), stdin);
     searchName[strcspn(searchName, "\n")] = '\0';
 
-    FILE *tempFile = fopen("temp.txt", "w");
-    int found = 0;
-    while (fscanf(file, "%99[^\n]\n%4[^\n]\n%9[^\n]\n%14[^\n]\n%99[^\n]\n%14[^\n]\n%9[^\n]\n%99[^\n]\n%19[^\n]\n%d\n",
-                  appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, &appt.isCompleted) != EOF) {
-        if (strcmp(appt.hname, searchName) == 0) {
-            found = 1;
-            appt.isCompleted = 1;
-            printf("|Appointment for %s marked as completed.\n", appt.hname);
-        }
-        fprintf(tempFile, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n",
-                appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, appt.isCompleted);
+    struct appointment appointments[100];
+    int appointmentCount = readAppointmentsFromFile(file, appointments, searchName);
+    fclose(file);
+
+    if (appointmentCount == 0) {
+        printf("|No appointments found for %s.\n", searchName);
+        clear();
+        return;
+    }
+    displayAppointmentsList(appointments, appointmentCount);
+    int choice;
+    printf("\n|Select the appointment number to %s: ", statusMessage);
+    scanf("%d", &choice);
+    getchar();
+
+    if (choice < 1 || choice > appointmentCount) {
+        printf("|Invalid choice. Operation canceled.\n");
+        clear();
+        return;
+    }
+    int selectedAppointment = choice - 1;
+    appointments[selectedAppointment].isCompleted = statusValue;
+    printf("-----------------------------------------------\n\n|Appointment with Doctor %s on %s at %s has been %s.\n",
+           appointments[selectedAppointment].dname, appointments[selectedAppointment].date,
+           appointments[selectedAppointment].time, statusMessage);
+    file = fopen("appointment.txt", "w");
+    for (int i = 0; i < appointmentCount; i++) {
+        fprintf(file, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n",
+                appointments[i].hname, appointments[i].age, appointments[i].gender, appointments[i].phone, appointments[i].dname,
+                appointments[i].date, appointments[i].time, appointments[i].reason, appointments[i].payment, appointments[i].isCompleted);
     }
     fclose(file);
-    fclose(tempFile);
-
-    if (found) {
-        remove("appointment.txt");
-        rename("temp.txt", "appointment.txt");
-    } else {
-        printf("|No appointment found for the name %s.", searchName);
-        remove("temp.txt");
-    }
+    printf("|File updated successfully.\n");
     clear();
 }
+void markAppointment() {
+    updateAppointmentStatus("mark as completed", 1);
+}
 void cancelAppointment() {
-    FILE *file = fopen("appointment.txt", "r+");
-
-    printf("\n|Enter the patient's full name to cancel the appointment: ");
-    char searchName[100];
-    getchar();
-    fgets(searchName, sizeof(searchName), stdin);
-    searchName[strcspn(searchName, "\n")] = '\0';
-
-    FILE *tempFile = fopen("temp.txt", "w");
-    int found = 0;
+    updateAppointmentStatus("cancel the appointment", -1);
+}
+int readAppointmentsFromFile(FILE *file, struct appointment appointments[], char searchName[100]) {
+    int appointmentCount = 0;
     while (fscanf(file, "%99[^\n]\n%4[^\n]\n%9[^\n]\n%14[^\n]\n%99[^\n]\n%14[^\n]\n%9[^\n]\n%99[^\n]\n%19[^\n]\n%d\n",
-                  appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, &appt.isCompleted) != EOF) {
-        if (strcmp(appt.hname, searchName) == 0) {
-            found = 1;
-            appt.isCompleted = -1;
-            printf("|Appointment for %s canceled.\n", appt.hname);
+                  appointments[appointmentCount].hname, appointments[appointmentCount].age, appointments[appointmentCount].gender,
+                  appointments[appointmentCount].phone, appointments[appointmentCount].dname, appointments[appointmentCount].date,
+                  appointments[appointmentCount].time, appointments[appointmentCount].reason, appointments[appointmentCount].payment,
+                  &appointments[appointmentCount].isCompleted) != EOF) {
+        if (strcmp(appointments[appointmentCount].hname, searchName) == 0) {
+            appointmentCount++;
         }
-        fprintf(tempFile, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n",
-                appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, appt.isCompleted);
     }
-    fclose(file);
-    fclose(tempFile);
-
-    if (found) {
-        remove("appointment.txt");
-        rename("temp.txt", "appointment.txt");
-    } else {
-        printf("|No appointment found for the name %s.", searchName);
-        remove("temp.txt");
+    return appointmentCount;
+}
+void displayAppointmentsList(struct appointment appointments[], int appointmentCount) {
+    printf("\n|Found %d appointment(s):\n", appointmentCount);
+    for (int i = 0; i < appointmentCount; i++) {
+        printf("\n|Appointment %d:\n", i + 1);
+        printf("|Date: %s, Time: %s, Doctor: %s, Reason: %s\n", appointments[i].date, appointments[i].time, appointments[i].dname, appointments[i].reason);
+        printf("------------------------------------------------------------------------------------------\n");
     }
-    clear();
 }
 void displayAppointment() {
     FILE *file = fopen("appointment.txt", "r");
-    printf("\n\t\t\t ------------------  Appointments Forum  ------------------\n\n");
+    printf("\n\t\t\t ------------------  Appointment Viewing Screen  ------------------\n\n");
+    char patientName[100];
+    printf("|Enter the patient's full name to view appointments: ");
+    fgets(patientName, sizeof(patientName), stdin);
+    patientName[strcspn(patientName, "\n")] = '\0';
 
-    while (fscanf(file, "%99[^\n]\n%4[^\n]\n%9[^\n]\n%14[^\n]\n%99[^\n]\n%14[^\n]\n%9[^\n]\n%99[^\n]\n%19[^\n]\n%d\n",
-                  appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, &appt.isCompleted) != EOF) {
-        printf("\t\t           ___________________Patient Information___________________\n\n");
-        printf("|Full Name: %s\n", appt.hname);
-        printf("|Age: %s\n", appt.age);
-        printf("|Gender: %s\n", appt.gender);
-        printf("|Phone Number: %s\n", appt.phone);
-
-        printf("\n\t\t          ___________________Appointment Details___________________\n\n");
-        printf("|Doctor Name: %s\n", appt.dname);
-        printf("|Date: %s\n", appt.date);
-        printf("|Time: %s\n", appt.time);
-        printf("|Reason: %s\n", appt.reason);
-
-        printf("\n\t\t          ___________________Payment Method___________________\n\n");
-        printf("|Payment Method: %s\n", appt.payment);
-
-        if (appt.isCompleted == 1) {
-            printf("|Status: Completed");
-        } else if (appt.isCompleted == -1) {
-            printf("|Status: Canceled");
-        } else {
-            printf("|Status: Pending");
-        }
-    }
+    struct appointment appointments[100];
+    int appointmentCount = readAppointmentsFromFile(file, appointments, patientName);
     fclose(file);
+    if (appointmentCount == 0) {
+        printf("|No appointments found for patient: %s\n", patientName);
+        clear();
+        return;
+    }
+    displayAppointmentsList(appointments, appointmentCount);
+    int choice;
+    printf("\n|Enter the number of the appointment to view details (1-%d): ", appointmentCount);
+    scanf("%d", &choice);
+    getchar();
+    system("cls");
+    if (choice < 1 || choice > appointmentCount) {
+        printf("|Invalid choice.\n");
+        clear();
+        return;
+    }
+
+    struct appointment selected = appointments[choice - 1];
+    printf("\n\t\t           ___________________Patient Information___________________\n\n");
+    printf("|Full Name: %s\n", selected.hname);
+    printf("|Age: %s\n", selected.age);
+    printf("|Gender: %s\n", selected.gender);
+    printf("|Phone Number: %s\n", selected.phone);
+
+    printf("\n\t\t          ___________________Appointment Details___________________\n\n");
+    printf("|Doctor Name: %s\n", selected.dname);
+    printf("|Date: %s\n", selected.date);
+    printf("|Time: %s\n", selected.time);
+    printf("|Reason: %s\n", selected.reason);
+
+    printf("\n\t\t          ___________________Payment Method___________________\n\n");
+    printf("|Payment Method: %s\n", selected.payment);
+
+    if (selected.isCompleted == 1) {
+        printf("|Status: Completed\n");
+    } else if (selected.isCompleted == -1) {
+        printf("|Status: Canceled\n");
+    } else {
+        printf("|Status: Pending\n");
+    }
     clear();
 }
 void addNote() {
