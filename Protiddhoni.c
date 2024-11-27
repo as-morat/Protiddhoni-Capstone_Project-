@@ -55,7 +55,7 @@ void showTitle() {
 
 }
 void appointmentTitle(){printf("\n\t\t\t ------------------  Appointment Menu  ------------------\n\n");
-        printf("| 1. Add Appointment\n| 2. View Appointment\n| 3. Mark as Completed\n| 4. Cancel Appointment\n| 5. Back\n");}
+        printf("| 1. Add Appointment\n| 2. View Appointment\n|3. Mark as Completed\n| 4. Cancel Appointment\n| 5. Back\n");}
 void noteTitle(){printf("\n\t\t\t ------------------  Note Menu  ------------------\n\n");
         printf("| 1. Add Note\n| 2. View Notes\n| 3. Back\n");}
 void emergencyTitle(){printf("\n\t\t\t ------------------  Emergency Menu  ------------------\n\n");
@@ -235,7 +235,7 @@ void updateAppointmentStatus(char statusMessage[], int statusValue) {
     }
     int selectedAppointment = choice - 1;
     appointments[selectedAppointment].isCompleted = statusValue;
-    printf("-----------------------------------------------\n\n|Appointment with Doctor %s on %s at %s has been %s.\n",
+    printf("-----------------------------------------------\n\n| Appointment with Doctor %s on %s at %s has been %s.\n",
            appointments[selectedAppointment].dname, appointments[selectedAppointment].date,
            appointments[selectedAppointment].time, statusMessage);
     file = fopen("appointment.txt", "w");
