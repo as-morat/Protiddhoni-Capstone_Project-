@@ -30,6 +30,7 @@ struct medicine {
     char name[50];
     char dosage[20];
     char frequency[20];
+    char mealTime[50];
     char startDate[15];
     int duration;
     int daysLeft;
@@ -57,7 +58,7 @@ void showTitle() {
 void appointmentTitle(){printf("\n\t\t\t ------------------  Appointment Menu  ------------------\n\n");
         printf("| 1. Add Appointment\n| 2. View Appointment\n| 3. Mark as Completed\n| 4. Cancel Appointment\n| 5. Back\n");}
 void noteTitle(){printf("\n\t\t\t ------------------  Note Menu  ------------------\n\n");
-        printf("| 1. Add Note\n| 2. View Notes\n| 3. Back\n");}
+        printf("| 1. Add Note\n| 2. View Notes\n| 3. Delete Note by Date\n| 4. Back\n");}
 void emergencyTitle(){printf("\n\t\t\t ------------------  Emergency Menu  ------------------\n\n");
         printf("| Welcome! Let me know how I can assist you...\n");
         printf("| 1. Add Emergency Information\n| 2. View Emergency Information\n| 3. Back\n");}
@@ -65,7 +66,7 @@ void userTitle(){printf("\n\t\t\t ------------------  Main Menu  ---------------
         printf("| Welcome, Sir...\n");
         printf("| 1. Appointment\n| 2. Note\n| 3. Medicine\n| 4. Emergency\n| 5. Log out\n");}
 void MedicineTitle(){printf("\n\t\t\t ------------------  Medicine Menu  ------------------\n\n");
-        printf("| 1. Add Medicine\n| 2. Show Medicine Chart\n | 3. Mark Medicine as Taken\n| 4. Exit\n");}
+        printf("| 1. Add Medicine\n| 2. Show Medicine Chart\n| 3. Mark Medicine as Taken\n| 4. Exit\n");}
 void showRegister() {
     printf("\n\t\t\t--- Sign Up Screen ---\n\n");
     struct User newUser;
@@ -73,12 +74,12 @@ void showRegister() {
 
     printf("| Enter your full name: ");
     fgets(newUser.fname, sizeof(newUser.fname), stdin);
-    newUser.fname[strlen(newUser.fname) - 1] = '\0';
+    newUser.fname[strcspn(newUser.fname, "\n")] = '\0';
 
     while (1) {
         printf("| Enter your email address: ");
         fgets(newUser.email, sizeof(newUser.email), stdin);
-        newUser.email[strlen(newUser.email) - 1] = '\0';
+        newUser.email[strcspn(newUser.email, "\n")] = '\0';
         if (isValidEmail(newUser.email)) {
             break;
         } else {
@@ -97,7 +98,7 @@ void showRegister() {
 
     printf("| Enter password: ");
     fgets(newUser.password, sizeof(newUser.password), stdin);
-    newUser.password[strlen(newUser.password) - 1] = '\0';
+    newUser.password[strcspn(newUser.password, "\n")] = '\0';
 
     fprintf(fptr, "%s %s %s %s\n", newUser.user_name, newUser.password, newUser.fname, newUser.email);
     fclose(fptr);
@@ -114,7 +115,6 @@ int isValidEmail(const char *email) {
     }
     return 0;
 }
-
 int showLogin() {
     printf("\n\t\t\t--- Login Screen ---\n\n");
     struct User inputUser, storedUser;
@@ -122,15 +122,14 @@ int showLogin() {
 
     printf("| Enter user name: ");
     fgets(inputUser.user_name, sizeof(inputUser.user_name), stdin);
-    inputUser.user_name[strlen(inputUser.user_name) - 1] = '\0';
+    inputUser.user_name[strcspn(inputUser.user_name, "\n")] = '\0';
 
     printf("| Enter password: ");
     fgets(inputUser.password, sizeof(inputUser.password), stdin);
-    inputUser.password[strlen(inputUser.password) - 1] = '\0';
+    inputUser.password[strcspn(inputUser.password, "\n")] = '\0';
 
     while (fscanf(fptr, "%s %s %*s %*s", storedUser.user_name, storedUser.password) == 2) {
-        if (strcmp(inputUser.user_name, storedUser.user_name) == 0 &&
-            strcmp(inputUser.password, storedUser.password) == 0) {
+        if (strcmp(inputUser.user_name, storedUser.user_name) == 0 && strcmp(inputUser.password, storedUser.password) == 0) {
             fclose(fptr);
             printf("| Log in successful !!");
             clear();
@@ -139,6 +138,19 @@ int showLogin() {
     }
     fclose(fptr);
     return 0;
+}
+int confirmation(const char *msg, const char *msg1) {
+    char choice;
+    printf("\n| Confirm details? (y/n): ");
+    scanf(" %c", &choice);
+    getchar();
+    if (choice != 'y' && choice != 'Y') {
+        printf("\033[1;31m| %s not saved.\033[0m\n", msg);
+        return 0;
+    } else {
+        printf("| %s successfully!!\n", msg1);
+    }
+    return 1;
 }
 void addAppointment() {
     printf("\n\t\t\t ------------------  Doctor's Regular Checkup Appointment Form  ------------------\n\n");
@@ -182,28 +194,24 @@ void addAppointment() {
     appt.reason[strcspn(appt.reason, "\n")] = '\0';
 
     printf("\n\t\t          ___________________Payment Method___________________\n\n");
-    printf("| Payment Method (e.g., Cash, Card, Insurance): ");
-    fgets(appt.payment, sizeof(appt.payment), stdin);
-    appt.payment[strcspn(appt.payment, "\n")] = '\0';
+    printf("| Payment Method: ");
+    printf("\n| 1. Cash\n| 2. Card\n| 3. Online Banking\n| 4. Insurance\n ");
+    printf("\n| Enter your choice: ");
+    int payChooice;
+    scanf("%d",&payChooice);
+    getchar();
+    strcpy(appt.payment, (payChooice == 1) ? "Cash" : (payChooice == 2) ? "Card" : (payChooice == 3) ? "Online Banking" : "Insurance");
 
     appt.isCompleted = 0;
+    if (!confirmation("Appointment details", "Appointment registration")) {
+        clear();
+        return;
+    }
 
     FILE *file = fopen("appointment.txt", "a");
     fprintf(file, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n", appt.hname, appt.age, appt.gender, appt.phone, appt.dname, appt.date, appt.time, appt.reason, appt.payment, appt.isCompleted);
-    fclose(file);
+    fclose(file);clear();
 
-    printf("\n| Confirm appointment details? (y/n): ");
-    char choice;
-    scanf(" %c", &choice);
-    getchar();
-    if (choice != 'y' && choice != 'Y') {
-        printf("\033[1;31m| Appointment not saved.\033[0m");
-        clear();
-        return;
-    } else {
-        printf("\n| Appointment registration successfully!!");
-        clear();
-    }
 }
 void updateAppointmentStatus(char statusMessage[], int statusValue) {
     FILE *file = fopen("appointment.txt", "r");
@@ -218,10 +226,11 @@ void updateAppointmentStatus(char statusMessage[], int statusValue) {
     fclose(file);
 
     if (appointmentCount == 0) {
-        printf("\033[1;31m| No appointments found for %s.\033[0m", searchName);
+        printf("\033[1;31m| No appointments found for %s.\033[0m\n", searchName);
         clear();
         return;
     }
+
     displayAppointmentsList(appointments, appointmentCount);
     int choice;
     printf("\n| Select the appointment number to %s: ", statusMessage);
@@ -229,31 +238,47 @@ void updateAppointmentStatus(char statusMessage[], int statusValue) {
     getchar();
 
     if (choice < 1 || choice > appointmentCount) {
-        printf("\033[1;31m| Invalid choice. Operation canceled.\033[0m");
+        printf("\033[1;31m| Invalid choice. Operation canceled.\033[0m\n");
         clear();
         return;
     }
+
     int selectedAppointment = choice - 1;
+    if (appointments[selectedAppointment].isCompleted == 1 && statusValue == -1) {
+        printf("\033[1;33m| Appointment is already marked as completed. Cannot cancel it.\033[0m\n");
+        clear();
+        return;
+    }
+
     appointments[selectedAppointment].isCompleted = statusValue;
-    printf("-----------------------------------------------\n\n|Appointment with Doctor %s on %s at %s has been %s.\n",
+    printf("\n-----------------------------------------------\n");
+    printf("| Appointment with Doctor %s on %s at %s has been %s.\n",
            appointments[selectedAppointment].dname, appointments[selectedAppointment].date,
            appointments[selectedAppointment].time, statusMessage);
+
     file = fopen("appointment.txt", "w");
+    if (file == NULL) {
+        printf("\033[1;31m| Error: Unable to update the file.\033[0m\n");
+        return;
+    }
+
     for (int i = 0; i < appointmentCount; i++) {
         fprintf(file, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%d\n",
                 appointments[i].hname, appointments[i].age, appointments[i].gender, appointments[i].phone, appointments[i].dname,
                 appointments[i].date, appointments[i].time, appointments[i].reason, appointments[i].payment, appointments[i].isCompleted);
     }
     fclose(file);
-    printf("| File updated successfully!!");
+    printf("| File updated successfully!!\n");
     clear();
 }
+
 void markAppointment() {
     updateAppointmentStatus("mark as completed", 1);
 }
 void cancelAppointment() {
     updateAppointmentStatus("cancel the appointment", -1);
 }
+
 int readAppointmentsFromFile(FILE *file, struct appointment appointments[], char searchName[100]) {
     int appointmentCount = 0;
     while (fscanf(file, "%99[^\n]\n%4[^\n]\n%9[^\n]\n%14[^\n]\n%99[^\n]\n%14[^\n]\n%9[^\n]\n%99[^\n]\n%19[^\n]\n%d\n",
@@ -330,27 +355,102 @@ void displayAppointment() {
 }
 void addNote() {
     FILE *file = fopen("note.txt", "a");
-    printf("\n\t\t\t ------------------  Note Adding Screen  ------------------\n\n");
 
-    char note[1000];
-    printf("| Write your note: \n|");
+    printf("\n\t\t\t ------------------  Add Note  ------------------\n\n");
+
+    char note[1000], date[12];
+    printf("| Enter the date for the note (format: dd-mm-yyyy): ");
+    fgets(date, sizeof(date), stdin);
+    date[strcspn(date, "\n")] = '\0';
+
+    printf("| Write your note: \n| ");
     fgets(note, sizeof(note), stdin);
+    note[strcspn(note, "\n")] = '\0';
 
-    fprintf(file, "%s\n", note);
+    fprintf(file, "%s       \"%s\"\n", date, note);
     fclose(file);
-
-    printf("| Note saved successfully!!");
+    printf("| Note saved successfully!!\n");
     clear();
 }
 void viewNotes() {
     FILE *file = fopen("note.txt", "r");
-     printf("\n\t\t\t ------------------  Note Viewer Screen  ------------------\n\n");
+    printf("\n\t\t\t ------------------  View Notes  ------------------\n\n");
     char note[1000];
     printf("| Your Notes:\n");
     while (fgets(note, sizeof(note), file)) {
         printf("| %s", note);
     }
     fclose(file);
+    clear();
+}
+void deleteNote() {
+    FILE *file = fopen("note.txt", "r");
+    FILE *tempFile = fopen("temp.txt", "w");
+
+    printf("\n\t\t\t ------------------  Delete Note by Date  ------------------\n\n");
+    printf("| Enter the date of the note to delete (format: dd-mm-yyyy): ");
+    char targetDate[12];
+    fgets(targetDate, sizeof(targetDate), stdin);
+    targetDate[strcspn(targetDate, "\n")] = '\0';
+
+    char line[1000];
+    int found = 0;
+    int noteNumber = 0;
+    int deleteNoteIndex = -1;
+
+    while (fgets(line, sizeof(line), file)) {
+        if (strstr(line, targetDate) == line) {
+            noteNumber++;
+            printf("| %d. %s", noteNumber, line);
+        }
+    }
+
+    if (noteNumber == 0) {
+        printf("\033[1;31m| No notes found with the given date!!\033[0m\n");
+        fclose(file);
+        fclose(tempFile);
+        remove("temp.txt");
+        clear();
+        return;
+    }
+
+    printf("| Enter the note number to delete: ");
+    scanf("%d", &deleteNoteIndex);
+    getchar();
+
+    if (deleteNoteIndex < 1 || deleteNoteIndex > noteNumber) {
+        printf("\033[1;31m| Invalid note number!!\033[0m\n");
+        fclose(file);
+        fclose(tempFile);
+        remove("temp.txt");
+        clear();
+        return;
+    }
+
+    rewind(file);
+    noteNumber = 0;
+    while (fgets(line, sizeof(line), file)) {
+        if (strstr(line, targetDate) == line) {
+            noteNumber++;
+            if (noteNumber == deleteNoteIndex) {
+                found = 1;
+                continue;
+            }
+        }
+        fprintf(tempFile, "%s", line);
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (found) {
+        remove("note.txt");
+        rename("temp.txt", "note.txt");
+        printf("| Note number %d for %s deleted successfully!!\n", deleteNoteIndex, targetDate);
+    } else {
+        printf("\033[1;31m| Error: Note could not be deleted!!\033[0m\n");
+        remove("temp.txt");
+    }
     clear();
 }
 void addInfo() {
@@ -363,38 +463,35 @@ void addInfo() {
     fgets(emergency.address, sizeof(emergency.address), stdin);
     emergency.address[strcspn(emergency.address, "\n")] = '\0';
 
-
     printf("| Phone Number: ");
     fgets(emergency.sos, sizeof(emergency.sos), stdin);
     emergency.sos[strcspn(emergency.sos, "\n")] = '\0';
 
-
-    FILE *file = fopen("emergancy.txt", "a");
-    fprintf(file, "%s %s %s\n",emergency.fname,emergency.address, emergency.sos );
-    fclose(file);
-
-    printf("\n| Confirm details? (y/n): ");
-    char choice;
-    scanf(" %c", &choice);
-    getchar();
-    if (choice != 'y' && choice != 'Y') {
-    printf("\033[1;31m| Information not saved.\033[0m");
-    clear();
-    return;
-    }else{
-    printf("\n| Information added successfully!!");
-    clear();
+    if (!confirmation("Emergency details", "Emergency details added")) {
+        clear();
+        return;
     }
+    FILE *file = fopen("emergancy.txt", "w");
+    fprintf(file, "%s\n%s\n%s\n", emergency.fname, emergency.address, emergency.sos);
+    fclose(file);
+    clear();
 }
 void displayEmergency() {
     FILE *file = fopen("emergancy.txt", "r");
     printf("\n\t\t\t ------------------  Emergency Information Screen  ------------------\n\n");
+    if (fgets(emergency.fname, sizeof(emergency.fname), file) != NULL) {
+        emergency.fname[strcspn(emergency.fname, "\n")] = '\0';
+        fgets(emergency.address, sizeof(emergency.address), file);
+        emergency.address[strcspn(emergency.address, "\n")] = '\0';
+        fgets(emergency.sos, sizeof(emergency.sos), file);
+        emergency.sos[strcspn(emergency.sos, "\n")] = '\0';
 
-    while (fscanf(file, "%s %s %s", emergency.fname, emergency.address, emergency.sos) != EOF) {
         printf("\t\t           ___________________Patient Information___________________\n\n");
         printf("| Full Name: %s\n", emergency.fname);
         printf("| Home Address: %s\n", emergency.address);
         printf("| Phone Number: %s\n", emergency.sos);
+    } else {
+        printf("\033[1;31m| No emergency information available.\033[0m\n");
     }
     fclose(file);
     clear();
@@ -403,11 +500,10 @@ void saveToFile() {
     FILE *file = fopen("medicine.txt", "w");
     fprintf(file, "%d\n", medicineCount);
     for (int i = 0; i < medicineCount; i++) {
-        fprintf(file, "%s,%s,%s,%s,%d,%d,%d\n",medicines[i].name,medicines[i].dosage,medicines[i].frequency,medicines[i].startDate,medicines[i].duration,medicines[i].daysLeft,medicines[i].taken);
+        fprintf(file, "%s,%s,%s,%s,%s,%d,%d,%d\n",medicines[i].name, medicines[i].dosage, medicines[i].frequency,medicines[i].mealTime, medicines[i].startDate, medicines[i].duration,medicines[i].daysLeft, medicines[i].taken);
     }
     fclose(file);
 }
-
 void addMedicine() {
     printf("\n\t\t\t ------------------  Add Medicine  ------------------\n\n");
     if (medicineCount >= MAX_MEDICINES) {
@@ -416,82 +512,103 @@ void addMedicine() {
     }
 
     printf("| Enter Medicine Name: ");
-    scanf(" %[^\n]", medicines[medicineCount].name);
+    fgets(medicines[medicineCount].name, sizeof(medicines[medicineCount].name), stdin);
+    medicines[medicineCount].name[strcspn(medicines[medicineCount].name, "\n")] = '\0';
 
-    printf("| Enter Dosage (e.g., 1 tablet): ");
-    scanf(" %[^\n]", medicines[medicineCount].dosage);
+    printf("| Enter Dosage (e.g., 500mg, 1 Tablet): ");
+    fgets(medicines[medicineCount].dosage, sizeof(medicines[medicineCount].dosage), stdin);
+    medicines[medicineCount].dosage[strcspn(medicines[medicineCount].dosage, "\n")] = '\0';
 
     printf("| Enter Frequency (e.g., Morning, Night): ");
-    scanf(" %[^\n]", medicines[medicineCount].frequency);
+    fgets(medicines[medicineCount].frequency, sizeof(medicines[medicineCount].frequency), stdin);
+    medicines[medicineCount].frequency[strcspn(medicines[medicineCount].frequency, "\n")] = '\0';
+
+    printf("| Should the medicine be taken-\n| 1. Before Meals\n| 2. After Meals\n");
+    int Mchoice;
+    printf("\n| Enter your choice (1 or 2): ");
+    scanf("%d", &Mchoice);getchar();
+    strcpy(medicines[medicineCount].mealTime, (Mchoice == 1) ? "Before Meals" : "After Meals");
 
     printf("| Enter Start Date (DD-MM-YYYY): ");
-    scanf(" %[^\n]", medicines[medicineCount].startDate);
+    fgets(medicines[medicineCount].startDate, sizeof(medicines[medicineCount].startDate), stdin);
+    medicines[medicineCount].startDate[strcspn(medicines[medicineCount].startDate, "\n")] = '\0';
 
+    char durationStr[10];
     printf("| Enter Duration (in days): ");
-    if (scanf("%d", &medicines[medicineCount].duration) != 1 || medicines[medicineCount].duration <= 0) {
-        printf("\033[1;31m| Invalid duration! Please enter a positive number.\033[0m\n");
-        return;clear();
+    fgets(durationStr, sizeof(durationStr), stdin);
+    if (sscanf(durationStr, "%d", &medicines[medicineCount].duration) != 1 || medicines[medicineCount].duration <= 0) {
+        printf("\033[1;31m| Invalid duration! Please enter a positive number.\033[0m\n");clear();
+        return;
     }
     medicines[medicineCount].daysLeft = medicines[medicineCount].duration;
     medicines[medicineCount].taken = 0;
     medicineCount++;
-    saveToFile();
-    printf("| Medicine added successfully!\n");clear();
+    printf("| Medicine added successfully!\n");
+    saveToFile(); clear();
 }
-
 void showChart() {
     printf("\n\t\t\t ------------------  Medicine Chart  ------------------\n\n");
+
     FILE *file = fopen("medicine.txt", "r");
-    int count;
-    if (fscanf(file, "%d\n", &count) != 1) {
-        printf("\033[1;31m-----------------------|------------|-----------------|------------|-----------|------------|\n| Error: Invalid.\033[0m");
-        fclose(file);clear();
+    if (file == NULL) {
+        printf("\033[1;31m| Error: No medicine data available.\033[0m\n");
         return;
     }
 
-    printf("\n| %-20s | %-10s | %-15s | %-10s | %-8s | %-10s |\n",
-           "Name", "Dosage", "Frequency", "Start Date", "Days Left", "Taken?");
-    printf("---------------------------------------------------------------------------------------------\n");
+    int count;
+    if (fscanf(file, "%d\n", &count) != 1) {
+        printf("\033[1;31m| Error: Invalid file format.\033[0m\n");
+        fclose(file);
+        return;
+    }
 
+    printf("-----------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("| %-20s | %-10s | %-15s | %-15s | %-10s | %-8s | %-6s | %-10s |\n",
+           "Name", "Dosage", "Frequency", "Meal Time", "Start Date", "Days Left", "Taken", "Status");
+    printf("-----------------------------------------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < count; i++) {
         struct medicine med;
-        if (fscanf(file, " %[^,],%[^,],%[^,],%[^,],%d,%d,%d\n",med.name,med.dosage,med.frequency,med.startDate,&med.duration,&med.daysLeft,&med.taken) == 7) {
-            printf("| %-20s | %-10s | %-15s | %-10s | %-8d | %-10s |\n", med.name,med.dosage,med.frequency,med.startDate,med.daysLeft,med.taken ? "Yes" : "No");
+        if (fscanf(file, " %[^,],%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n",med.name, med.dosage, med.frequency, med.mealTime,med.startDate, &med.duration, &med.daysLeft, &med.taken) == 8) {
+            char status[10];
+            strcpy(status, med.daysLeft > 0 ? "Ongoing" : "Complete");
+            printf("| %-20s | %-10s | %-15s | %-15s | %-10s | %-8d | %-6d | %-10s |\n",med.name, med.dosage, med.frequency, med.mealTime,med.startDate, med.daysLeft, med.taken, status);
         } else {
-            printf("\033[1;31m-----------------------|------------|-----------------|------------|-----------|------------|\n| Sorry!! There is no medicine info in file.\033[0m");
-            fclose(file);clear();
-            return;
+            printf("\033[1;31m| Error reading medicine information.\033[0m\n");
+            break;
         }
     }
-    printf("---------------------------------------------------------------------------------------------\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-    fclose(file);clear();
+    printf("-----------------------------------------------------------------------------------------------------------------------------------\033[0;32m\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||\033[0m");
+    fclose(file);
+    clear();
 }
-
 void markAsTaken() {
     printf("\n\t\t\t ------------------  Mark Medicine as Taken  ------------------\n\n");
 
     char name[50];
     printf("| Enter the name of the medicine to mark as taken: ");
-    scanf(" %[^\n]", name);getchar();
+    fgets(name, sizeof(name), stdin);
+    name[strcspn(name, "\n")] = '\0';
 
     for (int i = 0; i < medicineCount; i++) {
         if (strcmp(medicines[i].name, name) == 0) {
-            if (medicines[i].daysLeft > 0 && !medicines[i].taken) {
-                medicines[i].taken = 1;
+            if (medicines[i].daysLeft > 0) {
+                medicines[i].taken++;
                 medicines[i].daysLeft--;
                 saveToFile();
                 printf("| Marked '%s' as taken. Days left: %d\n", medicines[i].name, medicines[i].daysLeft);
-            } else if (medicines[i].daysLeft == 0) {
-                printf("| '%s' has no remaining doses.\n", medicines[i].name);
+                if (medicines[i].daysLeft == 0) {
+                    printf("| '%s' dosage is now complete!\n", medicines[i].name);
+                }
             } else {
-                printf("| '%s' is already marked as taken today.\n", medicines[i].name);
-            }clear();
+                printf("| '%s' has no remaining doses. The dosage is already complete.\n", medicines[i].name);
+            }
+            clear();
             return;
         }
     }
-    printf("\033[1;31m| Medicine not found!\033[0m\n");clear();
+    printf("\033[1;31m| Medicine not found!\033[0m\n");
+    clear();
 }
-
 void Medicinemenu() {
     int choice;
     do {
@@ -638,6 +755,9 @@ void noteMenu() {
                 viewNotes();
                 break;
             case 3:
+                deleteNote();
+                break;
+            case 4:
                 noteTitle();
                 printf("| Returning to Main Menu...");
                 clear();
@@ -648,7 +768,7 @@ void noteMenu() {
                 clear();
                 break;
         }
-    } while (choice != 3);
+    } while (choice != 4);
 }
 int main() {
     int log_in = 0;
@@ -693,4 +813,5 @@ int main() {
     }
 
     return 0;
+
 }
