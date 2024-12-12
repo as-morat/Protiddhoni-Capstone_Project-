@@ -189,7 +189,7 @@ void showRegister() {
     }
     newUser.user_name[i] = '\0';
     printf("| User name creating....\n");
-    Sleep(500);
+    Sleep(2000);
     printf("| Your user name: %s\n", newUser.user_name);
     clear();regTitlle();
     printf("\033[0;32m\n| To visible password press [V] or [v]....\n\n\033[0m");
