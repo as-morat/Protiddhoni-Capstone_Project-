@@ -1,3 +1,11 @@
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define RESET   "\033[0m"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -6,6 +14,9 @@
 #include<windows.h>
 #include <time.h>
 #define MAX_MEDICINES 100
+int medicineCount = 0;
+char searchDate[15];
+
 struct appointment {
     char hname[100];
     char searchName[100];
@@ -43,38 +54,53 @@ struct medicine {
 struct NoteData{
     char note[1000];
     char date[15];
-} data;
-int medicineCount = 0;
+} data,notesOnDate[100],temp;
 
 void clear(){
      printf("\n------------------------------\n");
-    printf("| Press Enter to continue...");
+    printf(YELLOW"| Press Enter to continue..."RESET);
     getchar();
     system("cls");
 }
 
-void showTitle() {
-    printf("\n\t\t\t -------------------------- \n");
-    printf("\t\t\t|       PROTIDDHONI        |\n");
-    printf("\t\t\t -------------------------- \n\n");
-    printf("| 1. Log in\n| 2. Sign up\n| 3. Exit\n");
-    printf("| Choose an option: ");
-
+void showTitle(char title[]) {
+    int len = strlen(title);
+    int padding = (26 - len) / 2;
+    int i;
+    printf(GREEN"\n\t\t\t\t\t -------------------------- \n");
+    printf("\t\t\t\t\t|"RESET);
+    for (i = 0; i < padding; i++) printf(" ");
+    printf(CYAN"%s"RESET, title);
+    for (i = 0; i < (26 - len - padding); i++) printf(" ");
+    printf(GREEN"|\n");
+    printf("\t\t\t\t\t -------------------------- \n\n"RESET);
 }
-void regTitlle(){
-    printf("\n\t\t\t--- Sign Up Screen ---\n\n");}
-void appointmentTitle(){printf("\n\t\t\t ------------------  Appointment Menu  ------------------\n\n");
-        printf("| 1. Add Appointment\n| 2. View Appointment\n| 3. Mark as Completed\n| 4. Cancel Appointment\n| 5. Back\n");}
-void noteTitle(){printf("\n\t\t\t ------------------  Note Menu  ------------------\n\n");
-        printf("| 1. Add Note\n| 2. View Notes\n| 3. Delete Note by Date\n| 4. Back\n");}
-void emergencyTitle(){printf("\n\t\t\t ------------------  Emergency Menu  ------------------\n\n");
-        printf("\t\t\t<<<<<<<<< Welcome Sir! Let me know how I can assist you? >>>>>>>>>\n");
-        printf("| 1. Add Emergency Information\n| 2. View Emergency Information\n| 3. Back\n");}
-void userTitle(){printf("\n\t\t\t ------------------  Main Menu  ------------------\n\n");
-        printf("| Welcome, Sir...\n");
-        printf("| 1. Appointment\n| 2. Note\n| 3. Medicine\n| 4. Emergency\n| 5. Log out\n");}
-void MedicineTitle(){printf("\n\t\t\t ------------------  Medicine Menu  ------------------\n\n");
-        printf("| 1. Add Medicine\n| 2. Show Medicine Chart\n| 3. Mark Medicine as Taken\n| 4. Exit\n");}
+void introTitle() {
+    showTitle("PROTIDDHONI_2.0");
+    printf(MAGENTA "|\t\t\t 1. Log In\n|\t\t\t 2. Sign Up\n|\t\t\t 3. Exit\n" RESET);
+}
+void appointmentTitle() {
+    showTitle("Appointment Menu");
+    printf(MAGENTA"|\t\t\t 1. Add Appointment\n|\t\t\t 2. View Appointment\n|\t\t\t 3. Mark as Completed\n|\t\t\t 4. Cancel Appointment\n|\t\t\t 5. Back\n\n"RESET);
+}
+void noteTitle() {
+    showTitle("Note Menu");
+    printf(MAGENTA"|\t\t\t 1. Add Note\n|\t\t\t 2. View Notes\n|\t\t\t 3. Delete Note by Date\n|\t\t\t 4. Back\n\n"RESET);
+}
+void emergencyTitle() {
+    showTitle("Emergency Menu");
+    printf(GREEN"| Welcome Sir! Let me know how I can assist you? \n\n"RESET);
+    printf(MAGENTA"|\t\t\t 1. Add Emergency Information\n|\t\t\t 2. View Emergency Information\n|\t\t\t 3. Back\n\n"RESET);
+}
+void userTitle() {
+    showTitle("Main Menu");
+    printf(GREEN"| Welcome, Sir...\n\n"RESET);
+    printf(MAGENTA"|\t\t\t 1. Appointment\n|\t\t\t 2. Note\n|\t\t\t 3. Medicine\n|\t\t\t 4. Emergency\n|\t\t\t 5. Log out\n\n"RESET);
+}
+void MedicineTitle() {
+    showTitle("Medicine Menu");
+    printf(MAGENTA"|\t\t\t 1. Add Medicine\n|\t\t\t 2. Show Medicine Chart\n|\t\t\t 3. Mark Medicine as Taken\n|\t\t\t 4. Exit\n\n"RESET);
+}
 
 int isValidEmail(char email[]) {
     char *at = strchr(email, '@');
@@ -131,176 +157,197 @@ void getPassword(char *password, int maxLength) {
             if (showPassword) {
                 printf("%c", ch);  // Show password character if visibility is enabled
             } else {
-                printf("*");  // Hide password character with asterisk
+                printf(RED"*"RESET);  // Hide password character with asterisk
             }
         }
     }
     printf("\n");
 }
 void showRegister() {
-    regTitlle();
+    showTitle("Sign Up");
     struct User newUser;
     FILE *fptr = fopen("login.txt", "a");
     char newUserPassword[50], confirmPassword[50], verificationCode[5], userCode[5];
 
-    printf("| Enter your full name: ");
+    printf(BLUE"| Enter your full name: "RESET);
     fgets(newUser.fname, sizeof(newUser.fname), stdin);
     newUser.fname[strlen(newUser.fname) - 1] = '\0';
 
     while (1) {
-        printf("| Enter your email address: ");
+        printf(BLUE"| Enter your email address: "RESET);
         fgets(newUser.email, sizeof(newUser.email), stdin);
         newUser.email[strlen(newUser.email) - 1] = '\0';
 
         if (!isValidEmail(newUser.email)) {
-            printf("\033[1;31m| Invalid email format. Please try again.\n\033[0m");
+            printf(RED"\n| Invalid email format. Please try again.\n"RESET);
             continue;
         }
-
         if (isEmailExists(newUser.email)) {
-            printf("\033[1;31m| Email already registered. Please use another email.\n\033[0m");
+            printf(RED"\n| Email already registered. Please use another email.\n"RESET);
             continue;
         }
-
         break;
     }
 
     generateVerificationCode(verificationCode);
-    printf("| Verification code sent...\n");
+    printf("..........................................................\n\n"MAGENTA"| Verification code sending...\n"RESET);
+    printf(BLUE"| Verification code sent: "RESET);
     Sleep(2000);
-    printf("| Verification code sent: %s\n", verificationCode);
-    clear();regTitlle();
-    printf("| Enter the verification code: ");
+    printf(GREEN"%s\n"RESET, verificationCode);
+    clear();
+    showTitle("Sign Up");
+
+    printf(BLUE "| Enter the verification code: " RESET);
     fgets(userCode, sizeof(userCode), stdin);
-    clear();regTitlle();
-    if (userCode[strlen(userCode) - 1] == '\n') {
+    getchar();
+    if (
+        userCode[strlen(userCode) - 1] == '\n') {
         userCode[strlen(userCode) - 1] = '\0';
     }
-    if (strcmp(verificationCode, userCode) != 0) {
-        printf("\033[1;31m| Verification failed. Please try again.\n\033[0m");
-        fclose(fptr);
-        clear();
-        return;
+    if (
+        strcmp(verificationCode, userCode) != 0) {
+                printf(RED "\n| Verification failed. Please try again.\n" RESET);
+                fclose(fptr);
+                clear();
+                return;
     }
+    printf(GREEN "\n| Verification successful! Proceeding to the next step..." RESET);
+    clear();
+    showTitle("Sign Up");
     int i = 0, maxLength = 8;
     while (newUser.email[i] != '@' && newUser.email[i] != '\0' && i < maxLength) {
         newUser.user_name[i] = newUser.email[i];
         i++;
     }
     newUser.user_name[i] = '\0';
-    printf("| User name creating....\n");
+    printf(MAGENTA "| User name creating....\n" RESET);
+    printf(BLUE "| Your user name: " RESET );
     Sleep(2000);
-    printf("| Your user name: %s\n", newUser.user_name);
-    clear();regTitlle();
-    printf("\033[0;32m\n| To visible password press [V] or [v]....\n\n\033[0m");
+    printf(GREEN "%s\n" RESET, newUser.user_name);
+    clear();
+    showTitle("Sign Up");
+
+    printf(GREEN"| To visible password press [V] or [v]....\n\n"RESET);
     while (1) {
-        printf("| Enter password (at least 5 characters): ");
+        printf(BLUE"| Enter password (at least 5 characters): "RESET);
         getPassword(newUserPassword, sizeof(newUserPassword));
         if (strlen(newUserPassword) < 5) {
-            printf("\033[1;31m| Password must be at least 5 characters long. Please try again.\n\033[0m");
+            printf(RED"\n| Password must be at least 5 characters long. Please try again.\n"RESET);
             continue;
         }
         break;
     }
 
     while (1) {
-        printf("| Confirm password: ");
+        printf(BLUE"| Confirm password: "RESET);
         getPassword(confirmPassword, sizeof(confirmPassword));
         if (strcmp(newUserPassword, confirmPassword) != 0) {
-            printf("\033[1;31m| Passwords do not match. Please try again.\n\033[0m");
+            printf(RED"\n| Passwords do not match. Please try again.\n"RESET);
         } else {
             strcpy(newUser.password, newUserPassword);
+            break;
+            }
+        }
             fprintf(fptr, "%s %s %s %s\n", newUser.user_name, newUser.password, newUser.fname, newUser.email);
             fclose(fptr);
-            printf("\n| Sign up successful !!");
+            printf(GREEN"\n| Sign up successful !!"RESET);
             clear();
-            break;
-        }
-    }
 }
-int showLogin() {
-    printf("\n\t\t\t--- Login Screen ---\n\n");
+void showLogin() {
+    showTitle("Log In");
     struct User inputUser, storedUser;
     FILE *fptr = fopen("login.txt", "r");
 
-    printf("| Enter user name: ");
+    printf(BLUE"| Enter user name: "RESET);
     fgets(inputUser.user_name, sizeof(inputUser.user_name), stdin);
     inputUser.user_name[strlen(inputUser.user_name)-1] = '\0';
 
-    printf("\033[0;32m\n| To visible password press [V] or [v]....\n\n\033[0m");
-    printf("| Enter password: ");
+    printf(GREEN"\n| To visible password press [V] or [v]....\n"RESET);
+    printf(BLUE"\n| Enter password: "RESET);
     getPassword(inputUser.password, sizeof(inputUser.password));
 
-    while (fscanf(fptr, "%s %s %*s %*s", storedUser.user_name, storedUser.password) == 2) {
-        if (strcmp(inputUser.user_name, storedUser.user_name) == 0 && strcmp(inputUser.password, storedUser.password) == 0) {
-            fclose(fptr);
-            printf("\n| Log in successful !!");
-            clear();
-            return 1;
+    while (fscanf(fptr, "%s %s %s %s", storedUser.user_name, storedUser.password, storedUser.fname, storedUser.email) == 4) {
+    if (strcmp(storedUser.user_name, inputUser.user_name) == 0 &&
+        strcmp(storedUser.password, inputUser.password) == 0) {
+        printf(GREEN"\n| Login successful! Welcome, Sir...\n"RESET);
+        fclose(fptr);
+        clear();
+        return userMenu();
         }
     }
     fclose(fptr);
-    return 0;
+    printf(RED"\n| Invalid!!!\n| Please enter the correct username and password or sign up first."RESET);
+    clear();
 }
 
 int confirmation(char msg[], char msg1[]) {
     char choice;
-    printf("\n| Confirm details? (y/n): ");
+    printf(BLUE"\n| Confirm details? (y/n): "RESET);
     scanf(" %c", &choice);
     getchar();
     if (choice != 'y' && choice != 'Y') {
-        printf("\033[1;31m| %s not saved.\033[0m", msg);
+        printf(RED"\n| %s not saved.\n"RESET, msg);
         return 0;
     } else {
-        printf("| %s successfully!!", msg1);
+        printf(GREEN"\n| %s successfully!!"RESET, msg1);
     }
     return 1;
 }
 void addAppointment() {
-    printf("\n\t\t\t ------------------  Doctor's Regular Checkup Appointment Form  ------------------\n\n");
+    showTitle("Appointment Form");
 
-    printf("\t\t           ___________________Patient Information___________________\n\n");
-    printf("| Full Name: ");
+    printf(YELLOW"           ___________________Patient Information___________________\n\n"RESET);
+    printf(BLUE"| Full Name: "RESET);
     fgets(appt.hname, sizeof(appt.hname), stdin);
     appt.hname[strlen(appt.hname)-1] = '\0';
 
-    printf("| Age: ");
+    printf(BLUE"| Age: "RESET);
     fgets(appt.age, sizeof(appt.age), stdin);
     appt.age[strlen(appt.age)-1] = '\0';
 
-    printf("| Gender: ");
-    printf("\n| 1. Male\n| 2. Female ");
+    printf(BLUE"| Gender: "RESET);
+    printf(MAGENTA"\n\t\t\t| 1. Male\n\t\t\t| 2. Female \n"RESET);
     int gender_choice;
-    printf("\n| Enter your choice (1 or 2): ");
+    printf(BLUE"\n| Enter your choice (1 or 2): "RESET);
     scanf("%d", &gender_choice);
     getchar();
     strcpy(appt.gender, (gender_choice == 1) ? "Male" : "Female");
 
-    printf("| Phone Number: ");
+    printf(BLUE "| Phone Number: " RESET);
     fgets(appt.phone, sizeof(appt.phone), stdin);
-    appt.phone[strlen(appt.phone)-1] = '\0';
+    appt.phone[strlen(appt.phone) - 1] = '\0';
 
-    printf("\n\t\t          ___________________Appointment Details___________________\n\n");
-    printf("| Doctor Name(Neurologist): ");
+    if (isValidPhoneNumber(appt.phone)) {
+    char formattedPhone[15];
+    snprintf(formattedPhone, sizeof(formattedPhone), GREEN "+88%s" RESET, appt.phone); // Green formatting for success
+    strcpy(emergency.sos, formattedPhone);
+    } else {
+    printf(RED "\n| Invalid phone number. It must be 11 digits long.\n" RESET);
+    clear();
+    return;
+    }
+
+    printf(YELLOW"\n          ___________________Appointment Details___________________\n\n"RESET);
+    printf(BLUE"| Doctor Name(Neurologist): "RESET);
     fgets(appt.dname, sizeof(appt.dname), stdin);
     appt.dname[strlen(appt.dname)-1] = '\0';
 
-    printf("| Preferred Date (date - month - year): ");
+    printf(BLUE"| Preferred Date (date - month - year): "RESET);
     fgets(appt.date, sizeof(appt.date), stdin);
     appt.date[strlen(appt.date)-1] = '\0';
 
-    printf("| Preferred Time (hour : minutes  am/pm): ");
+    printf(BLUE"| Preferred Time (hour : minutes  am/pm): "RESET);
     fgets(appt.time, sizeof(appt.time), stdin);
     appt.time[strlen(appt.time)-1] = '\0';
 
-    printf("| Reason for Checkup: ");
+    printf(BLUE"| Reason for Checkup: "RESET);
     fgets(appt.reason, sizeof(appt.reason), stdin);
     appt.reason[strlen(appt.reason)-1] = '\0';
 
-    printf("\n\t\t          ___________________Payment Method___________________\n\n");
-    printf("| Payment Method: ");
-    printf("\n| 1. Cash\n| 2. Card\n| 3. Online Banking\n| 4. Insurance\n ");
-    printf("\n| Enter your choice: ");
+    printf(YELLOW"\n          ___________________Payment Method___________________\n\n"RESET);
+    printf(BLUE"| Payment Method: "RESET);
+    printf(MAGENTA"\n|\t\t\t 1. Cash\n|\t\t\t 2. Card\n|\t\t\t 3. Online Banking\n|\t\t\t 4. Insurance\n "RESET);
+    printf(BLUE"\n| Enter your choice: "RESET);
     int payChooice;
     scanf("%d",&payChooice);
     getchar();
@@ -318,9 +365,9 @@ void addAppointment() {
 }
 void updateAppointmentStatus(char statusMessage[], int statusValue) {
     FILE *file = fopen("appointment.txt", "r");
-    printf("\n\t\t\t ------------------  Status Updating Screen  ------------------\n\n");
+    showTitle("Appointment Updating");
     char searchName[100];
-    printf("\n| Enter the patient's full name to %s: ", statusMessage);
+    printf(BLUE"| Enter the patient's full name to %s: "RESET, statusMessage);
     fgets(searchName, sizeof(searchName), stdin);
     searchName[strlen(searchName)-1] = '\0';
 
@@ -329,41 +376,41 @@ void updateAppointmentStatus(char statusMessage[], int statusValue) {
     fclose(file);
 
     if (appointmentCount == 0) {
-        printf("\033[1;31m| No appointments found for %s.\033[0m", searchName);
+        printf(RED"\n| No appointments found for %s."RESET, searchName);
         clear();
         return;
     }
     displayAppointmentsList(appointments, appointmentCount);
     int choice;
-    printf("\n| Select the appointment number to %s: ", statusMessage);
+    printf(BLUE"| Select the appointment number to %s: "RESET, statusMessage);
     scanf("%d", &choice);
     getchar();
 
     if (choice < 1 || choice > appointmentCount) {
-        printf("\033[1;31m| Invalid choice. Operation canceled.\033[0m");
+        printf(RED"\n| Invalid choice. Operation canceled.\n"RESET);
         clear();
         return;
     }
 
     int selectedAppointment = choice - 1;
     if (appointments[selectedAppointment].isCompleted == statusValue) {
-        printf("\033[1;31m\n| The appointment is already %s.\033[0m\n",(statusValue == 1) ? "marked as completed" : "canceled");
+        printf(RED"\n| The appointment is already %s.\n"RESET,(statusValue == 1) ? "marked as completed" : "canceled");
         clear();
         return;
     }
     if (statusValue == 1 && appointments[selectedAppointment].isCompleted == -1) {
-        printf("\033[1;31m| The appointment is already canceled and cannot be marked as completed.\033[0m\n");
+        printf(RED"\n| The appointment is already canceled and cannot be marked as completed.\n"RESET);
         clear();
         return;
     }
     if (statusValue == -1 && appointments[selectedAppointment].isCompleted == 1) {
-        printf("\033[1;31m| The appointment is already marked as completed and cannot be canceled.\033[0m\n");
+        printf(RED"\n| The appointment is already marked as completed and cannot be canceled.\n"RESET);
         clear();
         return;
     }
 
     appointments[selectedAppointment].isCompleted = statusValue;
-    printf("-----------------------------------------------\n\n| Appointment with Doctor %s on %s at %s has been %s.\n",
+    printf("-----------------------------------------------\n"GREEN"\n| Appointment with Doctor %s on %s at %s has been %s."RESET,
            appointments[selectedAppointment].dname, appointments[selectedAppointment].date,
            appointments[selectedAppointment].time, statusMessage);
 
@@ -375,7 +422,7 @@ void updateAppointmentStatus(char statusMessage[], int statusValue) {
     }
     fclose(file);
 
-    printf("| File updated successfully!!");
+    printf(GREEN"\n| File updated successfully!!"RESET);
     clear();
 }
 void markAppointment() {
@@ -398,18 +445,22 @@ int readAppointmentsFromFile(FILE *file, struct appointment appointments[], char
     return appointmentCount;
 }
 void displayAppointmentsList(struct appointment appointments[], int appointmentCount) {
-    printf("\n| Found %d appointment(s):\n", appointmentCount);
+    printf(BLUE "\n| Found " RED "%d" BLUE " appointment(s):\n" RESET, appointmentCount);
+
     for (int i = 0; i < appointmentCount; i++) {
-        printf("\n| Appointment %d:\n", i + 1);
-        printf("| Date: %s, Time: %s, Doctor: %s, Reason: %s\n", appointments[i].date, appointments[i].time, appointments[i].dname, appointments[i].reason);
-        printf("------------------------------------------------------------------------------------------\n");
+        printf(BLUE "\n| Appointment ["GREEN"%d"BLUE"]:\n\n", i + 1);
+        printf("| Date   : " YELLOW "%s\n", appointments[i].date);
+        printf(BLUE "| Time   : " YELLOW "%s\n", appointments[i].time);
+        printf(BLUE "| Doctor : " YELLOW "%s\n", appointments[i].dname);
+        printf(BLUE "| Reason : " YELLOW "%s\n", appointments[i].reason);
+        printf(CYAN "------------------------------------------------------------------------------------------\n" RESET);
     }
 }
 void displayAppointment() {
     FILE *file = fopen("appointment.txt", "r");
-    printf("\n\t\t\t ------------------  Appointment Viewing Screen  ------------------\n\n");
+    showTitle("Display Appointment");
     char patientName[100];
-    printf("| Enter the patient's full name to view appointments: ");
+    printf(BLUE"| Enter the patient's full name to view appointments: "RESET);
     fgets(patientName, sizeof(patientName), stdin);
     patientName[strlen(patientName)-1] = '\0';
 
@@ -417,146 +468,140 @@ void displayAppointment() {
     int appointmentCount = readAppointmentsFromFile(file, appointments, patientName);
     fclose(file);
     if (appointmentCount == 0) {
-        printf("\033[1;31m| No appointments found for patient: %s\033[0m", patientName);
+        printf(RED"\n| No appointments found for patient: "GREEN"%s\n"RESET, patientName);
         clear();
         return;
     }
     displayAppointmentsList(appointments, appointmentCount);
     int choice;
-    printf("\n| Enter the number of the appointment to view details: ", appointmentCount);
+    printf(BLUE"\n| Enter the number of the appointment to view details: "RESET, appointmentCount);
     scanf("%d", &choice);
     getchar();
-    system("cls");
+    system("cls");showTitle("Display Appointment");
     if (choice < 1 || choice > appointmentCount) {
-        printf("\033[1;31m| Invalid choice.\033[0m");
+        printf(RED"\n| Invalid choice.\n"RESET);
         clear();
         return;
     }
 
     struct appointment selected = appointments[choice - 1];
-    printf("\n\t\t           ___________________Patient Information___________________\n\n");
-    printf("| Full Name: %s\n", selected.hname);
-    printf("| Age: %s\n", selected.age);
-    printf("| Gender: %s\n", selected.gender);
-    printf("| Phone Number: %s\n", selected.phone);
+    printf(YELLOW"\n           ___________________Patient Information___________________\n\n");
+    printf(BLUE"| Full Name: "GREEN"%s\n", selected.hname);
+    printf(BLUE"| Age: "GREEN"%s\n", selected.age);
+    printf(BLUE"| Gender: "GREEN"%s\n", selected.gender);
+    printf(BLUE"| Phone Number: "GREEN"%s\n", selected.phone);
 
-    printf("\n\t\t          ___________________Appointment Details___________________\n\n");
-    printf("| Doctor Name: %s\n", selected.dname);
-    printf("| Date: %s\n", selected.date);
-    printf("| Time: %s\n", selected.time);
-    printf("| Reason: %s\n", selected.reason);
+    printf(YELLOW"\n          ___________________Appointment Details___________________\n\n");
+    printf(BLUE"| Doctor Name: "GREEN"%s\n", selected.dname);
+    printf(BLUE"| Date: "GREEN"%s\n", selected.date);
+    printf(BLUE"| Time: "GREEN"%s\n", selected.time);
+    printf(BLUE"| Reason: "GREEN"%s\n", selected.reason);
 
-    printf("\n\t\t          ___________________Payment Method___________________\n\n");
-    printf("| Payment Method: %s\n", selected.payment);
+    printf(YELLOW"\n          ___________________Payment Method___________________\n\n");
+    printf(BLUE"| Payment Method: "GREEN"%s\n", selected.payment);
 
     if (selected.isCompleted == 1) {
-        printf("| Status: Completed");
+        printf(BLUE"| Status: "GREEN"Completed"RESET);
     } else if (selected.isCompleted == -1) {
-        printf("| Status: Canceled");
+        printf(BLUE"| Status: "RED"Canceled"RESET);
     } else {
-        printf("| Status: Pending");
+        printf(BLUE"| Status: "MAGENTA"Pending"RESET);
     }
     clear();
 }
 
 void addNote() {
     FILE *file = fopen("note.txt", "a");
+    showTitle("Add Note");
 
-    printf("\n\t\t\t ------------------  Add Note  ------------------\n\n");
-
-    printf("| Enter the date for the note (format: dd-mm-yyyy): ");
+    printf(BLUE"| Enter the date (format: dd-mm-yyyy): "RESET);
     fgets(data.date, sizeof(data.date), stdin);
-    data.date[strlen(data.date) - 1] = '\0';
+    data.date[strcspn(data.date, "\n")] = 0;
 
-    printf("\n\t\t\t<<<<<<<<< Write your note >>>>>>>\n\n| ");
+    printf(CYAN"\n\n|\t\t\t\t<<<<<<<<< Write your note >>>>>>>>>\n\n\n| "RESET);
     fgets(data.note, sizeof(data.note), stdin);
-    data.note[strlen(data.note) - 1] = '\0';
+    data.note[strcspn(data.note, "\n")] = 0;
 
-    fprintf(file, "%s %s\n", data.date, data.note);
+    fprintf(file, "%s -> %s\n", data.date, data.note);
     fclose(file);
-    printf("\n| Note saved successfully!!");
+    printf(GREEN"\n| Note saved successfully!\n"RESET);
     clear();
 }
 void viewNotes() {
     FILE *file = fopen("note.txt", "r");
+    showTitle("View Note");
+    printf(BLUE"\t\t\t\t<<<<<<<<< Your Notes >>>>>>>>>\n\n\n"RESET);
     int found = 0;
-    printf("\n\t\t\t ------------------  View Notes  ------------------\n\n");
-    printf("\t\t\t<<<<<<<<< Your Notes >>>>>>>>\n\n");
-    while (fscanf(file, "%s %[^\n]", data.date, data.note) == 2) {
+    while (fscanf(file, "%14s -> %999[^\n]\n", temp.date, temp.note) != EOF) {
         found = 1;
-        printf("| %s :\t%s\n", data.date, data.note);
+        printf(MAGENTA"| %-12s"RED" ->\t "YELLOW"%s\n"RESET, temp.date, temp.note);
     }
     if (!found) {
-        printf("\033[1;31m| No notes written yet.\033[0m");
+        printf(RED"\n| No notes found.\n"RESET);
     }
     fclose(file);
     clear();
 }
 void deleteNote() {
     FILE *file = fopen("note.txt", "r");
-    int found = 0, noteNumber = 0, deleteNoteIndex = -1;
-    char searchDate[11];
+    showTitle("Delete A Note");
+    int found = 0;
 
-    while (1) {
-        printf("\n\t\t\t ------------------  Delete Note by Date  ------------------\n\n");
-        printf("| Enter the date of the note to delete (format: dd-mm-yyyy): ");
-        fgets(searchDate, sizeof(searchDate), stdin);
-        searchDate[strcspn(searchDate, "\n")] = 0;
-        rewind(file);
-        noteNumber = 0;
-        found = 0;
-        printf("\n");
-        while (fscanf(file, "%14s %[^\n]", data.date, data.note) == 2) {
-            noteNumber++;
-            if (strcmp(data.date, searchDate) == 0) {
-                printf("| %d. %s :\t%s\n", noteNumber, data.date, data.note);
-                found = 1;
-            }
-        }
-        if (!found) {
-            printf("\033[1;31m| No notes found with the given date!!\033[0m");
-            char tryAgain;
-            printf("\n| Do you want to try again? (y/n): ");
-            scanf(" %c", &tryAgain);
-            getchar();
-            if (tryAgain != 'y' && tryAgain != 'Y') {
-                fclose(file);
-                clear();
-                return;
-            }
-            clear();
-            continue;
-        }
-        printf("\n| Enter the note number to delete: ");
-        scanf("%d", &deleteNoteIndex);
-        getchar();
+    printf(BLUE"\n| Enter the date of the note to delete (format: dd-mm-yyyy): "RESET);
+    fgets(searchDate, sizeof(searchDate), stdin);
+    searchDate[strcspn(searchDate, "\n")] = 0;
 
-        if (deleteNoteIndex < 1 || deleteNoteIndex > noteNumber) {
-            printf("\033[1;31m\n| Invalid note number!!\033[0m");
-            clear();
-            continue;
+    FILE *tempFile = fopen("temp.txt", "w");
+    int totalNotesOnDate = 0, noteIndex = 0;
+    while (fscanf(file, "%14s -> %999[^\n]\n", temp.date, temp.note) != EOF) {
+        if (strcmp(temp.date, searchDate) == 0) {
+            found = 1;
+            notesOnDate[totalNotesOnDate] = temp;
+            totalNotesOnDate++;
         }
-        FILE *tempFile = fopen("temp.txt", "w");
-        rewind(file);
-        noteNumber = 0;
-        while (fscanf(file, "%14s %[^\n]", data.date, data.note) == 2) {
-            noteNumber++;
-            if (noteNumber != deleteNoteIndex) {
-                fprintf(tempFile, "%s %s\n", data.date, data.note);
-            }
-        }
-
+    }
+    if (!found) {
         fclose(file);
         fclose(tempFile);
-        remove("note.txt");
-        rename("temp.txt", "note.txt");
-
-        printf("\n| Note deleted successfully!!");
+        remove("temp.txt");
+        printf(RED"\n| No notes found for the given date.\n"RESET);
         clear();
         return;
     }
+    printf(CYAN"\n| Total "RED"%d "CYAN"Notes available on "MAGENTA"%s .....\n\n"RESET, totalNotesOnDate, searchDate);
+    for (int i = 0; i < totalNotesOnDate; i++) {
+        printf(CYAN"| %d. "MAGENTA"%-12s "RED"->\t"YELLOW"%s\n"RESET, i + 1, notesOnDate[i].date, notesOnDate[i].note);
+    }
+    int deleteIndex;
+    printf(BLUE"\n| Enter the note number to delete: "RESET);
+    scanf("%d", &deleteIndex);
+    getchar();
+    if (deleteIndex < 1 || deleteIndex > totalNotesOnDate) {
+        fclose(file);
+        fclose(tempFile);
+        remove("temp.txt");
+        printf(RED"\n| Invalid note number. Deletion canceled.\n"RESET);
+        clear();
+        return;
+    }
+    rewind(file);
+    noteIndex = 0;
+    while (fscanf(file, "%14s -> %999[^\n]\n", temp.date, temp.note) != EOF) {
+        if (strcmp(temp.date, searchDate) == 0) {
+            noteIndex++;
+            if (noteIndex == deleteIndex) {
+                continue;
+            }
+        }
+        fprintf(tempFile, "%s -> %s\n", temp.date, temp.note);
+    }
+    fclose(file);
+    fclose(tempFile);
+    remove("note.txt");
+    rename("temp.txt", "note.txt");
+    printf(GREEN"\n| Note deleted successfully!\n"RESET);
+    clear();
 }
-
 
 int isValidPhoneNumber(char *phone) {
     int len = strlen(phone);
@@ -567,16 +612,16 @@ int isValidPhoneNumber(char *phone) {
     return 1;
 }
 void addInfo() {
-    printf("\n\t\t\t ------------------  Emergency Information Add Screen  ------------------\n\n");
-    printf("| Full Name: ");
+    showTitle("Add Emergency Info.");
+    printf(BLUE"| Full Name: "RESET);
     fgets(emergency.fname, sizeof(emergency.fname), stdin);
     emergency.fname[strcspn(emergency.fname, "\n")] = '\0';
 
-    printf("| Home Address: ");
+    printf(BLUE"| Home Address: "RESET);
     fgets(emergency.address, sizeof(emergency.address), stdin);
     emergency.address[strcspn(emergency.address, "\n")] = '\0';
 
-    printf("| Phone Number (11 digits): ");
+    printf(BLUE"| Phone Number (11 digits): "RESET);
     fgets(emergency.sos, sizeof(emergency.sos), stdin);
     emergency.sos[strcspn(emergency.sos, "\n")] = '\0';
 
@@ -585,7 +630,7 @@ void addInfo() {
         snprintf(formattedPhone, sizeof(formattedPhone), "+88%s", emergency.sos);
         strcpy(emergency.sos, formattedPhone);
     } else {
-        printf("Invalid phone number. It must be 11 digits long.\n");
+        printf(RED"\nInvalid phone number. It must be 11 digits long.\n"RESET);clear();
         return;
     }
     if (!confirmation("Emergency details", "Emergency details added")) {
@@ -599,19 +644,20 @@ void addInfo() {
 }
 void displayEmergency() {
     FILE *file = fopen("emergency.txt", "r");
-    printf("\n\t\t\t ------------------  Emergency Information Screen  ------------------\n\n");
+    showTitle("Emergency Information");
     if (fgets(emergency.fname, sizeof(emergency.fname), file) && fgets(emergency.address, sizeof(emergency.address), file) && fgets(emergency.sos, sizeof(emergency.sos), file)) {
 
         emergency.fname[strcspn(emergency.fname, "\n")] = '\0';
         emergency.address[strcspn(emergency.address, "\n")] = '\0';
         emergency.sos[strcspn(emergency.sos, "\n")] = '\0';
 
-        printf("\t\t\t<<<<<<<<< Patient Information >>>>>>>>>\n\n");
-        printf("| Full Name   : %s\n", emergency.fname);
-        printf("| Home Address: %s\n", emergency.address);
-        printf("| Phone Number: %s\n", emergency.sos);
+        printf(GREEN"\t\t<<<<<<<<< Patient Information >>>>>>>>>\n\n"RESET);
+        printf(BLUE"| Full Name   : " RESET YELLOW "%s\n"RESET, emergency.fname);
+        printf(BLUE  "| Home Address: " RESET YELLOW "%s\n"RESET, emergency.address);
+        printf(BLUE"| Phone Number: " RESET YELLOW "%s\n"RESET, emergency.sos);
+
     } else {
-        printf("\033[1;31m| No emergency information available right now.\033[0m");
+        printf(RED"\n| No emergency information available right now.\n"RESET);
     }
     fclose(file);
     clear();
@@ -626,108 +672,137 @@ void saveToFile() {
     fclose(file);
 }
 void addMedicine() {
-    printf("\n\t\t\t ------------------  Add Medicine  ------------------\n\n");
+    showTitle("Add Medicine");
     if (medicineCount >= MAX_MEDICINES) {
-        printf("\033[1;31m| Medicine chart is full!\033[0m\n");clear();
+        printf(RED"\n| Medicine chart is full.\n"RESET);clear();
         return;
     }
 
-    printf("| Enter Medicine Name: ");
+    printf(BLUE"| Enter Medicine Name: "RESET);
     fgets(medicines[medicineCount].name, sizeof(medicines[medicineCount].name), stdin);
     medicines[medicineCount].name[strcspn(medicines[medicineCount].name, "\n")] = '\0';
 
-    printf("| Enter Dosage (e.g., 500mg, 1 Tablet): ");
+    printf(BLUE"| Enter Dosage (e.g., 500mg, 1 Tablet): "RESET);
     fgets(medicines[medicineCount].dosage, sizeof(medicines[medicineCount].dosage), stdin);
     medicines[medicineCount].dosage[strcspn(medicines[medicineCount].dosage, "\n")] = '\0';
 
-    printf("| Enter Frequency (e.g., Morning, Night): ");
+    printf(BLUE"| Enter Frequency (e.g., Morning, Night): "RESET);
     fgets(medicines[medicineCount].frequency, sizeof(medicines[medicineCount].frequency), stdin);
     medicines[medicineCount].frequency[strcspn(medicines[medicineCount].frequency, "\n")] = '\0';
 
-    printf("| Should the medicine be taken-\n| 1. Before Meals\n| 2. After Meals\n");
+    printf(BLUE"| Should the medicine be taken-\n\n"RESET MAGENTA"\t\t\t| 1. Before Meals\n\t\t\t| 2. After Meals\n\n"RESET);
     int Mchoice;
-    printf("\n| Enter your choice (1 or 2): ");
+    printf(BLUE"\n| Enter your choice (1 or 2): "RESET);
     scanf("%d", &Mchoice);getchar();
     strcpy(medicines[medicineCount].mealTime, (Mchoice == 1) ? "Before Meals" : "After Meals");
 
-    printf("| Enter Start Date (DD-MM-YYYY): ");
+    printf(BLUE"| Enter Start Date (DD-MM-YYYY): "RESET);
     fgets(medicines[medicineCount].startDate, sizeof(medicines[medicineCount].startDate), stdin);
     medicines[medicineCount].startDate[strcspn(medicines[medicineCount].startDate, "\n")] = '\0';
 
     char durationStr[10];
-    printf("| Enter Duration (in days): ");
+    printf(BLUE"| Enter Duration (in days): "RESET);
     fgets(durationStr, sizeof(durationStr), stdin);
     if (sscanf(durationStr, "%d", &medicines[medicineCount].duration) != 1 || medicines[medicineCount].duration <= 0) {
-        printf("\033[1;31m| Invalid duration! Please enter a positive number.\033[0m\n");clear();
+        printf(RED"\n| Invalid duration! Please enter a positive number.\n"RESET);clear();
         return;
     }
     medicines[medicineCount].daysLeft = medicines[medicineCount].duration;
     medicines[medicineCount].taken = 0;
     medicineCount++;
-    printf("| Medicine added successfully!\n");
+    printf(GREEN"\n| Medicine added successfully!"RESET);
     saveToFile(); clear();
 }
 void showChart() {
-    printf("\n\t\t\t ------------------  Medicine Chart  ------------------\n\n");
+    showTitle("Medicine Chart");
 
     FILE *file = fopen("medicine.txt", "r");
-    if (file == NULL) {
-        printf("\033[1;31m| Error: No medicine data available.\033[0m\n");
-        return;
-    }
-
     int count;
     if (fscanf(file, "%d\n", &count) != 1) {
-        printf("\033[1;31m| Error: Invalid file format.\033[0m\n");
-        fclose(file);
+        printf(RED"\n| Error: Invalid file format.\n"RESET);
+        fclose(file);clear();
         return;
     }
 
-    printf("-----------------------------------------------------------------------------------------------------------------------------------\n");
-    printf("| %-20s | %-10s | %-15s | %-15s | %-10s | %-8s | %-6s | %-10s |\n",
+    printf(BLUE"------------------------------------------------------------------------------------------------------------------------\n"RESET);
+    printf("| "RED"%-20s"BLUE" | "RED"%-10s"BLUE" | "RED"%-15s"BLUE" | "RED"%-15s"BLUE" | "RED"%-10s"BLUE" | "RED"%-8s"BLUE" | "RED"%-6s"BLUE" | "RED"%-10s"BLUE" |\n"RESET,
            "Name", "Dosage", "Frequency", "Meal Time", "Start Date", "Days Left", "Taken", "Status");
-    printf("-----------------------------------------------------------------------------------------------------------------------------------\n");
+    printf(BLUE"------------------------------------------------------------------------------------------------------------------------\n"RESET);
+
     for (int i = 0; i < count; i++) {
         struct medicine med;
-        if (fscanf(file, " %[^,],%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n",med.name, med.dosage, med.frequency, med.mealTime,med.startDate, &med.duration, &med.daysLeft, &med.taken) == 8) {
+        if (fscanf(file, " %[^,],%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n",
+                   med.name, med.dosage, med.frequency, med.mealTime,
+                   med.startDate, &med.duration, &med.daysLeft, &med.taken) == 8) {
             char status[10];
             strcpy(status, med.daysLeft > 0 ? "Ongoing" : "Complete");
-            printf("| %-20s | %-10s | %-15s | %-15s | %-10s | %-8d | %-6d | %-10s |\n",med.name, med.dosage, med.frequency, med.mealTime,med.startDate, med.daysLeft, med.taken, status);
+
+            printf("| "GREEN"%-20s"RESET" | "BLUE"%-10s"RESET" | "MAGENTA"%-15s"RESET" | "CYAN"%-15s"RESET" | "YELLOW"%-10s"RESET" | "RED"%-8d"RESET" | "BLUE"%-6d"RESET" | "GREEN"%-10s"RESET" |\n",
+                   med.name, med.dosage, med.frequency, med.mealTime,
+                   med.startDate, med.daysLeft, med.taken, status);
         } else {
-            printf("\033[1;31m| Error reading medicine information.\033[0m\n");
+            printf(RED"\n| Error reading medicine information.\n"RESET);
             break;
         }
     }
-    printf("-----------------------------------------------------------------------------------------------------------------------------------\033[0;32m\n###################################################################################################################################\033[0m");
+
+    printf(BLUE"------------------------------------------------------------------------------------------------------------------------\n"RESET);
+    printf(CYAN"************************************************************************************************************************\n"RESET);
     fclose(file);
     clear();
 }
 void markAsTaken() {
-    printf("\n\t\t\t ------------------  Mark Medicine as Taken  ------------------\n\n");
+    showTitle("Mark As Taken");
+
+    FILE *file = fopen("medicine.txt", "r");
+
+    int medicineCountFromFile = 0;
+    if (fscanf(file, "%d\n", &medicineCountFromFile) != 1) {
+        printf(RED"| Error: Invalid file format.\n"RESET);
+        fclose(file);
+        return;
+    }
+
+    medicineCount = medicineCountFromFile;
+
+    for (int i = 0; i < medicineCount; i++) {
+        if (fscanf(file, " %[^,],%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n",
+                   medicines[i].name, medicines[i].dosage, medicines[i].frequency,
+                   medicines[i].mealTime, medicines[i].startDate, &medicines[i].duration,
+                   &medicines[i].daysLeft, &medicines[i].taken) != 8) {
+            printf(RED"| Error: Unable to read medicine data.\n"RESET);
+            fclose(file);clear();
+            return;
+        }
+    }
+    fclose(file);
 
     char name[50];
-    printf("| Enter the name of the medicine to mark as taken: ");
+    printf(BLUE"| Enter the name of the medicine to mark as taken: "RESET);
     fgets(name, sizeof(name), stdin);
     name[strcspn(name, "\n")] = '\0';
 
+    int found = 0;
     for (int i = 0; i < medicineCount; i++) {
         if (strcmp(medicines[i].name, name) == 0) {
+            found = 1;
             if (medicines[i].daysLeft > 0) {
                 medicines[i].taken++;
                 medicines[i].daysLeft--;
                 saveToFile();
-                printf("| Marked '%s' as taken. Days left: %d\n", medicines[i].name, medicines[i].daysLeft);
+                printf(GREEN"\n| Marked '%s' as taken.\tDays left: %d\n"RESET, medicines[i].name, medicines[i].daysLeft);
                 if (medicines[i].daysLeft == 0) {
-                    printf("| '%s' dosage is now complete!\n", medicines[i].name);
+                    printf(GREEN"\n| '%s' dosage is now complete!"RESET, medicines[i].name);
                 }
             } else {
-                printf("| '%s' has no remaining doses. The dosage is already complete.\n", medicines[i].name);
+                printf(RED"\n| '%s' has no remaining doses. Dosage is already complete.\n"RESET, medicines[i].name);
             }
-            clear();
-            return;
+            break;
         }
     }
-    printf("\033[1;31m| Medicine not found!\033[0m\n");
+    if (!found) {
+        printf(RED"\n| Medicine not found.\n"RESET);
+    }
     clear();
 }
 
@@ -735,7 +810,7 @@ void Medicinemenu() {
     int choice;
     do {
         MedicineTitle();
-        printf("|Enter your choice: ");
+        printf(BLUE"|Give me a command: "RESET);
         scanf("%d", &choice);
         getchar();
         system("cls");
@@ -751,12 +826,12 @@ void Medicinemenu() {
                 break;
             case 4:
                 MedicineTitle();
-                printf("| Exiting program. Stay healthy!");
+                printf(GREEN"\n| Back to the main menu....\n| Stay healthy!"RESET);
                 clear();
                 break;
             default:
                 MedicineTitle();
-                printf("\033[1;31m| Invalid choice! Please try again.\033[0m");
+                printf(RED"\n| Invalid choice! Please try again."RESET);
                 clear();
         }
     } while (choice != 4);
@@ -765,45 +840,39 @@ void userMenu() {
     int choice;
     while (1) {
         userTitle();
-        printf("| Enter your choice: ");
+        printf(BLUE"| Give Me a command: "RESET);
         scanf("%d", &choice);
         getchar();
         system("cls");
-
         switch (choice) {
             case 1:
                 appointmentMenu();
                 break;
-
             case 2:
                 noteMenu();
                 break;
-
             case 3:
                 Medicinemenu();
                 break;
-
             case 4:
                 emergencyMenu();
                 break;
-
             case 5:
                 userTitle();
-                printf("| Log Out from the program. Goodbye!");
+                printf(GREEN"\n| Log Out from the program. Goodbye!"RESET);
                 clear();
                 return main();
                 break;
-
             default:
                 userTitle();
-                printf("\033[1;31m| Invalid choice. Try again.\033[0m");
+                printf(RED"\n| Invalid choice. Try again."RESET);
                 clear();
                 break;
 } } }
 void emergencyMenu() {
     while (1) {
         emergencyTitle();
-        printf("| Choose an option: ");
+        printf(BLUE"| Give me a command: "RESET);
         int choice;
         scanf("%d", &choice);
         getchar();
@@ -817,11 +886,12 @@ void emergencyMenu() {
                 break;
             case 3:
                 emergencyTitle();
+                printf(GREEN"| Back to the main menu, Thanks..."RESET);
                 clear();
                 return;
             default:
                 emergencyTitle();
-                printf("\033[1;31m| Invalid option. Try again.\033[0m");
+                printf(RED"\n| Invalid option. Try again."RESET);
                 clear();
         }
     }
@@ -830,7 +900,7 @@ void appointmentMenu() {
     int choice;
     do {
         appointmentTitle();
-        printf("| Enter your choice: ");
+        printf(BLUE"| Give me a command: "RESET);
         scanf("%d", &choice);
         getchar();
         system("cls");
@@ -850,12 +920,12 @@ void appointmentMenu() {
                 break;
             case 5:
                 appointmentTitle();
-                printf("| Returning to Main Menu...");
+                printf(GREEN"\n| Returning to Main Menu..."RESET);
                 clear();
                 break;
             default:
                 appointmentTitle();
-                printf("\033[1;31m| Invalid choice. Try again.\033[0m");
+                printf(RED"\n| Invalid choice. Try again."RESET);
                 clear();
                 break;
         }
@@ -865,7 +935,7 @@ void noteMenu() {
      int choice;
     do {
         noteTitle();
-        printf("| Enter your choice: ");
+        printf(BLUE"| Give me a command: "RESET);
         scanf("%d", &choice);
         getchar();
         system("cls");
@@ -881,12 +951,12 @@ void noteMenu() {
                 break;
             case 4:
                 noteTitle();
-                printf("| Returning to Main Menu...");
+                printf(GREEN"\n| Returning to Main Menu..."RESET);
                 clear();
                 break;
             default:
                 noteTitle();
-                printf("\033[1;31m| Invalid choice. Try again.\033[0m");
+                printf(RED"\n| Invalid choice. Try again."RESET);
                 clear();
                 break;
         }
@@ -894,42 +964,29 @@ void noteMenu() {
 }
 
 int main() {
-    int log_in = 0;
-    int isLoggedIn = 0;
-
-    while (!isLoggedIn) {
-        showTitle();
+    while (1) {
+        introTitle();
+        printf(BLUE "\n| Give me a command: " RESET);
         int choice;
         scanf("%d", &choice);
         getchar();
         system("cls");
         switch (choice) {
             case 2:
-                system("cls");
                 showRegister();
                 break;
-
             case 1:
-                system("cls");
-                log_in = showLogin();
-                if (log_in == 1) {
-                    isLoggedIn = 1;
-                    userMenu();
-                } else {
-                    printf("\033[1;31m| Invalid!!!\n| Please enter the correct username and password or sign up first.\033[0m\n");
-                    clear();
-                }
+                showLogin();
                 break;
-
             case 3:
-                showTitle();
-                printf("\n\033[1;31m| Exiting program...\033[0m\n");
+                introTitle();
+                printf(GREEN"\n| Exiting program...\n\n"RESET);
+                clear();
                 exit(0);
                 break;
-
             default:
-                showTitle();
-                printf("\033[1;31m| Invalid option. Please try again.\033[0m");
+                introTitle();
+                printf(RED"\n| Invalid option. Please try again."RESET);
                 clear();
                 break;
         }
